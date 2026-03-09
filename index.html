@@ -3805,25 +3805,6 @@ function renderExtDebts(){
     {v:'other',ar:'مصاريف أخرى',fr:'Autres dépenses',icon:'💸'}
   ];
   body.innerHTML=`
-<!-- بطاقات الملخص -->
-<div class="cards-row" style="margin-bottom:14px">
-  <div class="stat-card" style="border-left:3px solid var(--er)">
-    <div class="sc-val" style="color:var(--er)">${totalDebts.toFixed(2)} ${cur}</div>
-    <div class="sc-lbl">${l==='fr'?'Total dettes externes':'إجمالي الديون الخارجية'}</div>
-    <div style="font-size:.7rem;color:var(--mu);margin-top:3px">${debtsOnly.filter(d=>(d.remaining||0)>0).length} ${l==='fr'?'créancier(s)':'دائن'}</div>
-  </div>
-  <div class="stat-card" style="border-left:3px solid var(--er)">
-    <div class="sc-val" style="color:var(--er)">${totalExpUnpaid.toFixed(2)} ${cur}</div>
-    <div class="sc-lbl">${l==='fr'?'Dépenses non réglées':'فواتير غير مسددة'}</div>
-    <div style="font-size:.7rem;color:var(--mu);margin-top:3px">${expensesOnly.filter(e=>!e.isPaid).length} ${l==='fr'?'poste(s)':'بند'}</div>
-  </div>
-  <div class="stat-card" style="border-left:3px solid var(--ok)">
-    <div class="sc-val" style="color:var(--ok)">${totalExpPaid.toFixed(2)} ${cur}</div>
-    <div class="sc-lbl">${l==='fr'?'Dépenses réglées':'فواتير مسددة'}</div>
-    <div style="font-size:.7rem;color:var(--mu);margin-top:3px">${expensesOnly.filter(e=>e.isPaid).length} ${l==='fr'?'poste(s)':'بند'}</div>
-  </div>
-</div>
-
 <!-- تبويبات -->
 <div class="tabs" style="margin-bottom:14px">
   <button class="tab-btn active" onclick="extTab('debts',this)">${l==='fr'?'Dettes externes':'الديون الخارجية'}</button>
@@ -3832,6 +3813,14 @@ function renderExtDebts(){
 
 <!-- تبويب الديون -->
 <div id="ext-tab-debts">
+  <!-- بطاقة الديون فقط -->
+  <div class="cards-row" style="margin-bottom:14px">
+    <div class="stat-card" style="border-left:3px solid var(--er)">
+      <div class="sc-val" style="color:var(--er)">${totalDebts.toFixed(2)} ${cur}</div>
+      <div class="sc-lbl">${l==='fr'?'Total dettes externes':'إجمالي الديون الخارجية'}</div>
+      <div style="font-size:.7rem;color:var(--mu);margin-top:3px">${debtsOnly.filter(d=>(d.remaining||0)>0).length} ${l==='fr'?'créancier(s)':'دائن'}</div>
+    </div>
+  </div>
   <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
     <button class="btn btn-pr" onclick="showExtDebtForm()">${t('btn_add_extdebt')}</button>
   </div>
@@ -3861,6 +3850,19 @@ function renderExtDebts(){
 
 <!-- تبويب المصاريف الشخصية -->
 <div id="ext-tab-expenses" style="display:none">
+  <!-- بطاقتا المصاريف فقط -->
+  <div class="cards-row" style="margin-bottom:14px">
+    <div class="stat-card" style="border-left:3px solid var(--er)">
+      <div class="sc-val" style="color:var(--er)">${totalExpUnpaid.toFixed(2)} ${cur}</div>
+      <div class="sc-lbl">${l==='fr'?'Dépenses non réglées':'فواتير غير مسددة'}</div>
+      <div style="font-size:.7rem;color:var(--mu);margin-top:3px">${expensesOnly.filter(e=>!e.isPaid).length} ${l==='fr'?'poste(s)':'بند'}</div>
+    </div>
+    <div class="stat-card" style="border-left:3px solid var(--ok)">
+      <div class="sc-val" style="color:var(--ok)">${totalExpPaid.toFixed(2)} ${cur}</div>
+      <div class="sc-lbl">${l==='fr'?'Dépenses réglées':'فواتير مسددة'}</div>
+      <div style="font-size:.7rem;color:var(--mu);margin-top:3px">${expensesOnly.filter(e=>e.isPaid).length} ${l==='fr'?'poste(s)':'بند'}</div>
+    </div>
+  </div>
   <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
     <button class="btn btn-wa" onclick="showExpenseForm()">${l==='fr'?'+ Ajouter dépense':'+ إضافة مصروف'}</button>
   </div>
@@ -3879,7 +3881,7 @@ function renderExtDebts(){
       <div class="form-group"><label>${l==='fr'?'Date':'التاريخ'}</label><input type="date" id="exp-date" value="${new Date().toISOString().slice(0,10)}"></div>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-wa" onclick="saveExpense()">${t('btn_save')}</button>
+      <button class="btn btn-wa" id="exp-save-btn" onclick="saveExpense()">${t('btn_save')}</button>
       <button class="btn btn-out" onclick="closeExpenseForm()">${t('btn_cancel')}</button>
     </div>
   </div>
@@ -3941,9 +3943,27 @@ function renderExtTable(){
 </tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--mu)">0</td></tr>`;
 }
 
+function showExtDebtForm(){
+  const f=document.getElementById('ext-form');
+  if(f)f.style.display=f.style.display==='none'?'block':'none';
+}
+
+function showExpenseForm(){
+  const f=document.getElementById('expense-form');
+  if(!f)return;
+  f.style.display='block';
+  delete f.dataset.editId;
+  const sb=document.getElementById('exp-save-btn');
+  if(sb)sb.textContent=t('btn_save');
+}
+
 function closeExpenseForm(){
   const form=document.getElementById('expense-form');
-  if(form){form.style.display='none';delete form.dataset.editId;const sb=form.querySelector('.btn-wa');if(sb)sb.textContent=t('btn_save');}
+  if(!form)return;
+  form.style.display='none';
+  delete form.dataset.editId;
+  const sb=document.getElementById('exp-save-btn');
+  if(sb)sb.textContent=t('btn_save');
 }
 
 function renderExpTable(){
@@ -4004,7 +4024,7 @@ function saveExpense(){
       State.externalDebts[idx]={...State.externalDebts[idx],expCategory:cat,note,amount,date:new Date(date).toISOString()};
     }
     delete form.dataset.editId;
-    const saveBtn=form.querySelector('.btn-wa');
+    const saveBtn=document.getElementById('exp-save-btn');
     if(saveBtn)saveBtn.textContent=t('btn_save');
   } else {
     State.externalDebts.push({id:Date.now().toString(),isExpense:true,expCategory:cat,note,amount,isPaid:false,date:new Date(date).toISOString()});
@@ -4026,7 +4046,7 @@ function editExpense(id){
   // حفظ id التعديل
   document.getElementById('expense-form').dataset.editId=id;
   // تغيير نص زر الحفظ
-  const saveBtn=document.querySelector('#expense-form .btn-wa');
+  const saveBtn=document.getElementById('exp-save-btn');
   if(saveBtn)saveBtn.textContent='💾 تحديث';
   document.getElementById('expense-form').scrollIntoView({behavior:'smooth'});
 }
@@ -4043,11 +4063,14 @@ function saveExtDebt(){
   const phone=document.getElementById('ed-phone').value.trim();
   const amount=parseFloat(document.getElementById('ed-amount').value)||0;
   const note=document.getElementById('ed-note').value.trim();
-  if(!amount){toast(t('prod_required'),'er');return;}
+  if(!amount){toast(t('prod_required'),'er');Snd.err();return;}
   State.externalDebts.push({id:Date.now().toString(),name,phone,amount,paid:0,remaining:amount,note,date:new Date().toISOString()});
-  saveState();document.getElementById('ext-form').style.display='none';
+  saveState();
+  document.getElementById('ext-form').style.display='none';
   ['ed-name','ed-phone','ed-amount','ed-note'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  renderExtDebts();toast(t('toast_saved'),'ok');Snd.ok();
+  renderExtDebts();
+  extTab('debts',document.querySelector('#extdebts-body .tab-btn'));
+  toast(t('toast_saved'),'ok');Snd.ok();
 }
 
 function editExtDebt(id){
@@ -4105,7 +4128,9 @@ function confirmPayExtDebt(){
 function deleteExtDebt(id){
   showConfirm(t('btn_delete'),t('confirm_delete_debt'),()=>{
     State.externalDebts=State.externalDebts.filter(d=>String(d.id)!==String(id));
-    saveState();renderExtDebts();toast(t('toast_deleted'),'wa');
+    saveState();renderExtDebts();
+    extTab('debts',document.querySelector('#extdebts-body .tab-btn'));
+    toast(t('toast_deleted'),'wa');
   });
 }
 
